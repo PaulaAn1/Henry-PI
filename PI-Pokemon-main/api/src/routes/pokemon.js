@@ -4,36 +4,57 @@ const router = Router();
 const axios = require('axios');
 
 
-router.get('/', (req, res, next) => {
-  const name = req.query.name;
-  let pokemonApi
-  let pokemonDb
+router.get('/', async (req, res, next) => {
   try {
-    pokemonApi = axios.get('https://pokeapi.co/api/v2/pokemon');
-    pokemonDb = Pokemon.findAll({
+    let pokemonApi = await axios.get('https://pokeapi.co/api/v2/pokemon');
+    let pokeApiDos = await axios.get('https://pokeapi.co/api/v2/pokemon/?offset=20&limit=20');
+    let pokemonDb = Pokemon.findAll({
         includes: Tipo
     })
     Promise.all([
       pokemonApi,
+      pokeApiDos,
       pokemonDb
     ])
-      .then((respuesta) => {
-        const [pokemonApi, pokemonDb] = respuesta;
-        let filterPokemon = pokemonApi.data.results 
+      .then( async (respuesta) => {
+        const [pokemonApi, pokeApiDos, pokemonDb] = respuesta;
+        let filterPokemon = pokemonApi.data.results
+        let filterPokeDos = pokeApiDos.data.results
         
         filterPokemon = filterPokemon.map((pokemon) => {
+          /* let dataUrl = await axios.get(pokemon.url)
+          dataUrl = dataUrl.data
+          let arrayPoke = []
+          arrayPoke.push(dataUrl);
+          arrayPoke = arrayPoke.map(poke => {
+            return {
+              name: poke.name,
+              image: poke.sprites.front_default,
+              type: poke.types['0'].type.name
+            }
+          })
+          console.log(arrayPoke); */
           return {
             name: pokemon.name,
           }   
         })
-        let allPokemons = [...filterPokemon, ...pokemonDb];
+        filterPokeDos = filterPokeDos.map((pokemon) => {
+          return {
+            name: pokemon.name
+          }   
+        })
+        /* console.log(filterPokeDos); */
+
+        let allPokemons = [...filterPokemon, ...filterPokeDos, ...pokemonDb];
         res.send(allPokemons);
+
     })
     
   } catch (error) {
     next(error);
   }
 });
+
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id
