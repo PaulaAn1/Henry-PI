@@ -1,56 +1,20 @@
-const { Router, response } = require('express');
+const { Router } = require('express');
 const { Pokemon, Tipo} = require('../db');
-const router = Router();
-const axios = require('axios');
+const { default: axios } = require("axios");
+const { getPokeApi } = require('./getPokeApi');
 
+const router = Router();
 
 router.get('/', async (req, res, next) => {
+  
   try {
-    let pokemonApi = await axios.get('https://pokeapi.co/api/v2/pokemon');
-    let pokeApiDos = await axios.get('https://pokeapi.co/api/v2/pokemon/?offset=20&limit=20');
+    let getApi = await getPokeApi();
     let pokemonDb = Pokemon.findAll({
-        includes: Tipo
-    })
-    Promise.all([
-      pokemonApi,
-      pokeApiDos,
-      pokemonDb
-    ])
-      .then( async (respuesta) => {
-        const [pokemonApi, pokeApiDos, pokemonDb] = respuesta;
-        let filterPokemon = pokemonApi.data.results
-        let filterPokeDos = pokeApiDos.data.results
-        
-        filterPokemon = filterPokemon.map((pokemon) => {
-          /* let dataUrl = await axios.get(pokemon.url)
-          dataUrl = dataUrl.data
-          let arrayPoke = []
-          arrayPoke.push(dataUrl);
-          arrayPoke = arrayPoke.map(poke => {
-            return {
-              name: poke.name,
-              image: poke.sprites.front_default,
-              type: poke.types['0'].type.name
-            }
-          })
-          console.log(arrayPoke); */
-          return {
-            name: pokemon.name,
-          }   
-        })
-        filterPokeDos = filterPokeDos.map((pokemon) => {
-          return {
-            name: pokemon.name
-          }   
-        })
-        /* console.log(filterPokeDos); */
-
-        let allPokemons = [...filterPokemon, ...filterPokeDos, ...pokemonDb];
-        res.send(allPokemons);
-
+      includes: Tipo
     })
     
-  } catch (error) {
+    }
+  catch (error) {
     next(error);
   }
 });

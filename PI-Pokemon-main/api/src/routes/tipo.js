@@ -11,9 +11,11 @@ router.get('/', (req, res, next) => {
       pokemonApi,
       pokemonDb
     ])
-      .then((respuesta) => {
+      .then(async (respuesta) => {
         const [pokemonApi, pokemonDb] = respuesta;
         let filterPokemon = pokemonApi.data.results
+        /* let next = await axios.get(filterPokemon.next)
+        console.log(next); */
         filterPokemon = filterPokemon.map((type) => {
           return {
             name: type.name,
